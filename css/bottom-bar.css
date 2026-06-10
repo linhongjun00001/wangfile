@@ -1,0 +1,128 @@
+/* ===== Bottom Bar Styles ===== */
+.bottom-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: var(--footer-height);
+    background: var(--surface);
+    border-top: 1px solid var(--rule);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    z-index: 100;
+    box-shadow: 0 -1px 3px rgb(0 0 0 / 0.05);
+    gap: 8px;
+}
+
+.bottom-bar-left,
+.bottom-bar-right {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+.bottom-bar-center {
+    flex: 1;
+    text-align: center;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.connection-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    font-weight: 500;
+    transition: var(--transition);
+    cursor: default;
+}
+
+.connection-status.online {
+    background: rgb(16 185 129 / 0.1);
+    color: var(--success);
+}
+
+.connection-status.offline {
+    background: rgb(239 68 68 / 0.1);
+    color: var(--danger);
+}
+
+.connection-status.syncing {
+    background: rgb(245 158 11 / 0.1);
+    color: var(--warning);
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: currentColor;
+    animation: pulse 2s infinite;
+}
+
+.connection-status.offline .status-dot,
+.connection-status.online .status-dot {
+    animation: none;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 10px;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    background: var(--surface);
+    color: var(--ink);
+    font-size: 13px;
+    cursor: pointer;
+    transition: var(--transition);
+    white-space: nowrap;
+    gap: 4px;
+}
+
+.action-btn:hover {
+    background: var(--surface-hover);
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.action-btn:active {
+    transform: scale(0.95);
+}
+
+.sync-info {
+    font-size: 12px;
+    color: var(--muted);
+}
+
+/* Admin mode indicator */
+body.is-admin .bottom-bar {
+    border-top-color: var(--primary);
+}
+
+body.is-admin .bottom-bar::before {
+    content: '管理模式';
+    position: absolute;
+    top: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--primary);
+    color: white;
+    padding: 2px 12px;
+    border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+    font-size: 11px;
+    font-weight: 600;
+}

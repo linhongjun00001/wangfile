@@ -1,0 +1,306 @@
+/* ===== Floor Map Styles ===== */
+.floor-map-wrapper {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+    background: var(--bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.floor-map-container {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+    cursor: grab;
+    perspective: 1000px;
+}
+
+.floor-map-container:active {
+    cursor: grabbing;
+}
+
+.floor-map-container.add-mode {
+    cursor: crosshair;
+}
+
+.floor-map {
+    width: 100%;
+    height: 100%;
+    transition: transform 0.1s ease-out;
+    transform-style: preserve-3d;
+}
+
+.floor-map.is-3d {
+    transform: rotateX(30deg) rotateZ(-15deg) scale(0.85);
+}
+
+.floor-map image {
+    opacity: 0.9;
+}
+
+/* ===== Seat Elements ===== */
+.seat-element {
+    cursor: pointer;
+    transition: all 0.2s ease;
+    filter: url(#shadow);
+}
+
+.seat-element:hover {
+    filter: url(#shadow) brightness(1.1);
+}
+
+.seat-element.dragging {
+    opacity: 0.7;
+    cursor: grabbing;
+}
+
+.seat-element.selected {
+    stroke: var(--primary);
+    stroke-width: 3;
+    filter: url(#glow);
+}
+
+.seat-element.status-available {
+    fill: #10b981;
+}
+
+.seat-element.status-occupied {
+    fill: #3b82f6;
+}
+
+.seat-element.status-maintenance {
+    fill: #f59e0b;
+}
+
+.seat-element.status-empty {
+    fill: #94a3b8;
+    stroke: #64748b;
+    stroke-width: 1;
+    stroke-dasharray: 4 2;
+}
+
+/* Seat label */
+.seat-label {
+    font-size: 11px;
+    font-weight: 600;
+    fill: white;
+    text-anchor: middle;
+    dominant-baseline: central;
+    pointer-events: none;
+    user-select: none;
+}
+
+.seat-label.small {
+    font-size: 9px;
+}
+
+/* ===== Tooltip ===== */
+.seat-tooltip {
+    position: absolute;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    box-shadow: var(--shadow-lg);
+    pointer-events: none;
+    z-index: 50;
+    min-width: 180px;
+    animation: tooltipFadeIn 0.15s ease;
+}
+
+@keyframes tooltipFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.tooltip-title {
+    font-weight: 600;
+    font-size: 14px;
+    margin-bottom: 6px;
+    color: var(--ink);
+}
+
+.tooltip-row {
+    display: flex;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 2px;
+}
+
+.tooltip-label {
+    font-weight: 500;
+    min-width: 40px;
+}
+
+/* ===== Area Overlay ===== */
+.area-overlay {
+    fill-opacity: 0.1;
+    stroke-width: 2;
+    stroke-dasharray: 8 4;
+    pointer-events: none;
+}
+
+.area-label {
+    font-size: 14px;
+    font-weight: 700;
+    fill-opacity: 0.6;
+    text-anchor: middle;
+    pointer-events: none;
+    user-select: none;
+}
+
+/* ===== Search Highlight ===== */
+.seat-element.search-highlight {
+    animation: searchPulse 1.5s ease infinite;
+}
+
+@keyframes searchPulse {
+    0%, 100% {
+        stroke: var(--warning);
+        stroke-width: 2;
+    }
+    50% {
+        stroke: var(--warning);
+        stroke-width: 4;
+    }
+}
+
+/* ===== Add Mode Indicator ===== */
+.add-mode-indicator {
+    position: absolute;
+    top: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--primary);
+    color: white;
+    padding: 8px 20px;
+    border-radius: var(--radius);
+    font-size: 13px;
+    font-weight: 500;
+    z-index: 10;
+    box-shadow: var(--shadow);
+    animation: slideDown 0.2s ease;
+}
+
+.add-mode-indicator::after {
+    content: ' (右键或ESC取消)';
+    opacity: 0.8;
+    font-size: 12px;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+/* ===== Zoom Controls ===== */
+.zoom-controls {
+    position: absolute;
+    bottom: 16px;
+    right: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    z-index: 10;
+}
+
+.zoom-btn {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    font-size: 18px;
+    cursor: pointer;
+    transition: var(--transition);
+    box-shadow: var(--shadow-sm);
+}
+
+.zoom-btn:hover {
+    background: var(--surface-hover);
+    border-color: var(--primary);
+}
+
+/* ===== Grid Background (when no image) ===== */
+.grid-background {
+    background-image:
+        linear-gradient(var(--rule) 1px, transparent 1px),
+        linear-gradient(90deg, var(--rule) 1px, transparent 1px);
+    background-size: 20px 20px;
+}
+
+/* ===== Loading State ===== */
+.floor-map-loading {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    background: var(--bg);
+    z-index: 5;
+}
+
+.loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid var(--rule);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.loading-text {
+    color: var(--muted);
+    font-size: 14px;
+}
+
+/* ===== Empty State ===== */
+.floor-map-empty {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    color: var(--muted);
+}
+
+.empty-icon {
+    font-size: 48px;
+    opacity: 0.5;
+}
+
+.empty-text {
+    font-size: 16px;
+}
+
+.empty-hint {
+    font-size: 13px;
+    opacity: 0.7;
+}
