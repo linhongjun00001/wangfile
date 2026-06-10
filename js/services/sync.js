@@ -124,13 +124,13 @@ class SyncService {
 
         switch (operation) {
             case 'insert':
-                if (table === 'seats') await supabaseService.createSeat(data);
-                if (table === 'areas') await supabaseService.createArea(data);
+                if (table === 'seats') await supabaseService.createSeat(this.cleanForSync(data));
+                if (table === 'areas') await supabaseService.createArea(this.cleanForSync(data));
                 break;
             case 'update':
-                if (table === 'seats') await supabaseService.updateSeat(data.id, data);
-                if (table === 'areas') await supabaseService.updateArea(data.id, data);
-                if (table === 'floors') await supabaseService.updateFloor(data.id, data);
+                if (table === 'seats') await supabaseService.updateSeat(data.id, this.cleanForSync(data));
+                if (table === 'areas') await supabaseService.updateArea(data.id, this.cleanForSync(data));
+                if (table === 'floors') await supabaseService.updateFloor(data.id, this.cleanFloorForSync(data));
                 break;
             case 'delete':
                 if (table === 'seats') await supabaseService.deleteSeat(data.id);
@@ -140,37 +140,70 @@ class SyncService {
     }
 
     /**
+     * 清理数据：移除不适合同步到服务器的本地大字段
+     */
+    cleanForSync(data) {
+        const clean = { ...data };
+        // 移除 base64 大字段，避免超出 Supabase 行大小限制
+        delete clean.bg_image_data;
+        delete clean.avatar_data;
+        return clean;
+    }
+
+    /**
+     * 清理楼层数据用于同步：保留 bg_image_url，移除本地 base64
+     */
+    cleanFloorForSync(data) {
+        const clean = { ...data };
+        delete clean.bg_image_data;
+        return clean;
+    }
+
+    /**
      * 从服务器拉取数据
      */
     async pullServerData() {
+        let hasChanges = false;
+
         // 拉取楼层数据
         const serverFloors = await supabaseService.getFloors();
         if (serverFloors.length > 0) {
             const localFloors = await dbService.getAll('floors');
-            await this.mergeData('floors', serverFloors, localFloors);
+            const floorChanged = await this.mergeData('floors', serverFloors, localFloors);
+            if (floorChanged) hasChanges = true;
         }
 
         // 拉取区域数据
         const serverAreas = await supabaseService.getAreas();
         if (serverAreas.length > 0) {
             const localAreas = await dbService.getAll('areas');
-            await this.mergeData('areas', serverAreas, localAreas);
+            const areaChanged = await this.mergeData('areas', serverAreas, localAreas);
+            if (areaChanged) hasChanges = true;
         }
 
         // 拉取工位数据
         const serverSeats = await supabaseService.getSeats();
         if (serverSeats.length > 0) {
             const localSeats = await dbService.getAll('seats');
-            await this.mergeData('seats', serverSeats, localSeats);
+            const seatChanged = await this.mergeData('seats', serverSeats, localSeats);
+            if (seatChanged) hasChanges = true;
+        }
+
+        // 如果有数据变化，刷新应用状态并触发重新渲染
+        if (hasChanges) {
+            await this.refreshStateData();
+            eventBus.emit('data:updated');
         }
     }
 
     /**
      * 合并服务器数据和本地数据
+     * @returns {boolean} 是否有数据变更
      */
     async mergeData(table, serverData, localData) {
         const localMap = new Map(localData.map(item => [item.id, item]));
         const serverMap = new Map(serverData.map(item => [item.id, item]));
+        let changed = false;
 
         // 更新或添加服务器数据到本地
         for (const [id, serverItem] of serverMap) {
@@ -178,14 +211,15 @@ class SyncService {
             if (!localItem) {
                 // 本地没有，添加
                 await dbService.put(table, serverItem);
+                changed = true;
             } else if (new Date(serverItem.updated_at) > new Date(localItem.updated_at)) {
                 // 服务器数据更新，覆盖本地
                 await dbService.put(table, serverItem);
+                changed = true;
             }
         }
 
-        // 删除本地已不存在于服务器的数据（可选，根据业务需求）
-        // 这里保留本地数据，避免误删
+        return changed;
     }
 
     /**

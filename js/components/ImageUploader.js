@@ -149,25 +149,32 @@ class ImageUploader {
                     const path = `floor-${floorId}-${Date.now()}.jpg`;
                     await supabaseService.uploadImage('floor-images', path, compressedImage.blob);
                     imageUrl = supabaseService.getImageUrl('floor-images', path);
+                    console.log('Floor image uploaded to Supabase:', imageUrl);
                 } catch (error) {
                     console.warn('Server upload failed, falling back to local:', error);
                 }
             }
 
-            // 更新楼层数据
+            // 更新楼层数据（始终保存base64到本地作为fallback）
             const floor = appState.get('floors').find(f => f.id === floorId);
             if (floor) {
                 const updates = {
                     ...floor,
                     bg_image_url: imageUrl,
-                    bg_image_data: !imageUrl ? compressedImage.dataUrl : null,
+                    // 始终保存base64到本地，确保离线和手机端都能显示
+                    bg_image_data: compressedImage.dataUrl,
                     width: compressedImage.width,
                     height: compressedImage.height,
                     updated_at: new Date().toISOString()
                 };
 
+                // 先保存到本地IndexedDB（包含完整base64）
+                await dbService.put('floors', updates);
+
+                // 再同步到Supabase（只推送URL，不推送base64大字段）
                 await syncService.queueChange('floors', 'update', updates);
-                notification.success(imageUrl ? '底图上传成功' : '底图已保存到本地');
+
+                notification.success(imageUrl ? '底图上传成功（已同步到云端）' : '底图已保存到本地');
                 this.close();
             }
         } catch (error) {

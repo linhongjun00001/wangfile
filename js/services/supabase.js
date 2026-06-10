@@ -247,12 +247,17 @@ class SupabaseService {
     }
 
     /**
-     * 获取图片URL
+     * 获取图片URL（确保公开访问）
      */
     getImageUrl(bucket, path) {
         if (!this.client) return null;
         const { data } = this.client.storage.from(bucket).getPublicUrl(path);
-        return data?.publicUrl || null;
+        let url = data?.publicUrl || null;
+        // 确保URL包含正确的公开访问参数
+        if (url && !url.includes('token=')) {
+            url += '?t=' + Date.now();
+        }
+        return url;
     }
 
     /**

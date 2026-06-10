@@ -179,8 +179,18 @@ class FloorMap {
 
         // 设置底图
         if (floor.bg_image_url || floor.bg_image_data) {
-            this.bgImage.setAttribute('href', floor.bg_image_url || floor.bg_image_data);
+            const imageUrl = floor.bg_image_url || floor.bg_image_data;
+            this.bgImage.setAttribute('href', imageUrl);
             this.bgImage.style.display = '';
+
+            // 如果使用URL加载，添加错误回退到base64
+            if (floor.bg_image_url && floor.bg_image_data) {
+                this.bgImage.onerror = () => {
+                    console.warn('Failed to load bg_image_url, falling back to base64 data');
+                    this.bgImage.setAttribute('href', floor.bg_image_data);
+                    this.bgImage.onerror = null;
+                };
+            }
         } else {
             this.bgImage.style.display = 'none';
             this.container.classList.add('grid-background');

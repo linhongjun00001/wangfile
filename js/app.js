@@ -149,6 +149,12 @@ class App {
             notification.success('数据同步成功', 2000);
         });
 
+        // 数据更新（从服务器拉取到新数据后）
+        eventBus.on('data:updated', () => {
+            // 强制重新渲染地图以显示底图等更新
+            if (floorMap) floorMap.render();
+        });
+
         // 同步失败
         eventBus.on('sync:error', (data) => {
             notification.error(`同步失败 (${data.retryCount}/${CONFIG.SYNC_MAX_RETRIES})`, 3000);
